@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use File::Copy;
+
+#copy("Library/menu.lbi","Library/.menu-temp.lbi") or die "Copy failed: $!";
+#open("Library/.menu-temp.lbi", '>>', '<!-- #BeginLibraryItem "/Library/menu.lbi" -->') or die $!;
+open my $orig, '<', "Library/menu.lbi" or die "Cant read orig file: $!";
+open my $new, '>', "Library/.menu-temp.lbi" or die "Can't write new file: $!";
+print $new '<!-- #BeginLibraryItem "/Library/menu.lbi" -->';
+while ( <$orig> ) {
+	print $new $_;
+}
+print $new '<!-- #EndLibraryItem -->';
+close $orig;
+close $new;
+
+sub slurp {
+    my $fn = shift;
+    open(IN,$fn);
+    return join('',<IN>);
+}
+
+my @files = grep ( -f ,<*.html>);
+for my $file (@files) {
+	print "$file\n";
+	my $_ = slurp("$file");
+	my $new_menu_items = slurp("Library/.menu-temp.lbi");
+	open my $output_file, '>', "$file";
+	s/<!-- #BeginLibraryItem "\/Library\/menu.lbi" -->(.*?)<!-- #EndLibraryItem -->/$new_menu_items/s;
+	print $output_file $_;
+}
